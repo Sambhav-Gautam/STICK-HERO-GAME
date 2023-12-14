@@ -42,6 +42,7 @@ public class StickHeroGame extends Application {
         popupStage.initModality(Modality.APPLICATION_MODAL);
         popupStage.setTitle("Load Game");
 
+
         GridPane gridPane = new GridPane();
         gridPane.setPadding(new Insets(20));
         gridPane.setHgap(10);

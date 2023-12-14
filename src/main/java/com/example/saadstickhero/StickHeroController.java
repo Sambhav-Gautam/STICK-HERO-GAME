@@ -25,6 +25,7 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
 import java.io.IOException;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -97,7 +98,7 @@ public class StickHeroController {
         heroImageView.setY(windowHeight - 135); // Set Y-coordinate
         isMousePressed = new AtomicBoolean(false);
         stickExtensionTimeline = new AtomicReference<>(new Timeline());
-        HighestScore ab = new HighestScore(gamePane);
+
 
         gamePane.getChildren().addAll(new ImageView(bgImage),pillar1, pillar2, heroImageView);
         score =  ScoreManager.getInstance(gamePane);
@@ -106,6 +107,12 @@ public class StickHeroController {
         int cherryPosition = random.nextInt((int) (Pillar1.getX()-200))+100;
         cherry = new Cherry(cherryPosition, Pillar1.getY(),gamePane);
         //cherry.addToPane(gamePane);
+        HighestScore ab = new HighestScore(gamePane);
+        Map.Entry<String, Integer> highestScoreEntry = GameStateManager.findHighestScore();
+        if(highestScoreEntry==null){
+            ab.updateScore(0);
+        }
+        else ab.updateScore(highestScoreEntry.getValue());
 
         gameScene.setOnMousePressed(event -> {
             if (event.getButton() == MouseButton.PRIMARY && stage=="waiting") {
