@@ -1,4 +1,4 @@
-package com.example.saadstickhero;
+package com.example.StickHero;
 
 import javafx.animation.*;
 import javafx.application.Application;
@@ -28,16 +28,16 @@ import javafx.util.Duration;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Objects;
 
 public class StickHeroGame extends Application {
-    public static boolean snowflakesActive = true;
     @Override
-    public void start(Stage primaryStage) throws IOException {
+    public void start(Stage primaryStage) {
         StickHeroController controller = new StickHeroController();
         primaryStage.setScene(new Scene(createContent(controller,primaryStage)));
         primaryStage.show();
     }
-    private void showLoadPopup(StickHeroController controller) throws IOException {
+    private void showLoadPopup() throws IOException {
         Stage popupStage = new Stage();
         popupStage.initModality(Modality.APPLICATION_MODAL);
         popupStage.setTitle("Load Game");
@@ -73,10 +73,10 @@ public class StickHeroGame extends Application {
     private Parent createContent(StickHeroController controller,Stage primary){
         Pane root = new Pane();
         root.setPrefSize(600, 700);
-        Image bgImage = new Image(getClass().getResourceAsStream("/com/example/saadstickhero/Images/BG.jpg"), 600, 700, false, true);
+        Image bgImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/example/StickHero/Images/BG.jpg")), 600, 700, false, true);
         VBox box = new VBox(5,
                 new CircleMenuItem("PLAY", () -> {
-                    controller.stopSnowflakes(); // Call the method in the controller to stop snowflakes
+
                     try {
                         controller.init(); // Call init method or any other actions in the controller
                     } catch (IOException e) {
@@ -87,7 +87,7 @@ public class StickHeroGame extends Application {
                 new StickHeroGame.MenuItem("SETTINGS", controller::optionsAction),
                 new StickHeroGame.MenuItem("LOAD", () -> {
                     try {
-                        showLoadPopup(controller);
+                        showLoadPopup();
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -165,38 +165,77 @@ public class StickHeroGame extends Application {
         }
     }
 
-    private static class MenuItem extends StackPane{
-        MenuItem(String name, Runnable action){
-            LinearGradient gradient = new LinearGradient(0,0.5,1,0.5,true, CycleMethod.NO_CYCLE,new Stop(0.1,Color.web("black",0.75)),new Stop(1.0,Color.web("black",0.15)));
-            Rectangle bg0  = new Rectangle(250,30,gradient);
-            Rectangle bg1 = new Rectangle(250,30,Color.web("black",0.2));
-            FillTransition ft = new FillTransition(Duration.seconds(0.33),bg1,Color.web("black",0.2),Color.web("white",0.69));
+    private static class MenuItem extends StackPane {
+        private static final double WIDTH = 250;
+        private static final double HEIGHT = 30;
+        private static final Duration TRANSITION_DURATION = Duration.seconds(0.33);
+
+        public MenuItem(String name, Runnable action) {
+            LinearGradient gradient = new LinearGradient(0, 0.5, 1, 0.5, true, CycleMethod.NO_CYCLE,
+                    new Stop(0.1, Color.web("black", 0.75)),
+                    new Stop(1.0, Color.web("black", 0.15)));
+
+            Rectangle bg0 = createRectangle(WIDTH, gradient);
+            Rectangle bg1 = createRectangle(WIDTH, gradient);
+            FillTransition ft = createFillTransition(bg1,
+                    Color.web("black", 0.2), Color.web("white", 0.69));
             ft.setAutoReverse(true);
             ft.setCycleCount(Integer.MAX_VALUE);
-            hoverProperty().addListener((o,oldValue, isHovering) -> {
-                if(isHovering){
-                    ft.playFromStart();
-                }
-                else{
-                    ft.stop();
-                    bg1.setFill(Color.web("black",0.2));
-                }
-            });
-            Rectangle line = new Rectangle(5,30);
-            line.widthProperty().bind(Bindings.when(hoverProperty()).then(8).otherwise(5));
-            line.fillProperty().bind(Bindings.when(hoverProperty()).then(Color.RED).otherwise(Color.GRAY));
-            Text text = new Text(name);
-            text.setFont(Font.font(22.0));
-            text.fillProperty().bind(Bindings.when(hoverProperty()).then(Color.WHITE).otherwise(Color.GRAY));
+
+            Rectangle line = createRectangle(5, gradient);
+            bindHoverProperties(line);
+
+            Text text = createText(name);
+            bindHoverProperties(text);
+
             setOnMouseClicked(e -> action.run());
             setOnMousePressed(e -> bg0.setFill(Color.LIGHTBLUE));
             setOnMouseReleased(e -> bg0.setFill(gradient));
+
             setAlignment(Pos.CENTER_LEFT);
-            HBox box = new HBox(15,line,text );
+            HBox box = new HBox(15, line, text);
             box.setAlignment(Pos.CENTER_LEFT);
-            getChildren().addAll(bg0,bg1,box);
+
+            getChildren().addAll(bg0, bg1, box);
+
+            hoverProperty().addListener((o, oldValue, isHovering) -> handleHoverChange(isHovering, ft, bg1));
+        }
+
+        private Rectangle createRectangle(double width, LinearGradient fill) {
+            Rectangle rectangle = new Rectangle(width, MenuItem.HEIGHT, fill);
+            rectangle.setStroke(Color.BLACK);
+            return rectangle;
+        }
+
+        private FillTransition createFillTransition(Rectangle rectangle, Color fromValue, Color toValue) {
+            FillTransition fillTransition = new FillTransition(MenuItem.TRANSITION_DURATION, rectangle, fromValue, toValue);
+            fillTransition.setAutoReverse(true);
+            fillTransition.setCycleCount(Integer.MAX_VALUE);
+            return fillTransition;
+        }
+
+        private void bindHoverProperties(Text text) {
+            text.fillProperty().bind(Bindings.when(hoverProperty()).then(Color.WHITE).otherwise(Color.GRAY));
+        }
+
+        private void bindHoverProperties(Rectangle rectangle) {
+            rectangle.widthProperty().bind(Bindings.when(hoverProperty()).then(8).otherwise(5));
+            rectangle.fillProperty().bind(Bindings.when(hoverProperty()).then(Color.RED).otherwise(Color.GRAY));
+        }
+
+        private void handleHoverChange(boolean isHovering, FillTransition ft, Rectangle bg1) {
+            if (isHovering) {
+                ft.playFromStart();
+            } else {
+                ft.stop();
+                bg1.setFill(Color.web("black", 0.2));
+            }
+        }
+
+        private Text createText(String content) {
+            Text text = new Text(content);
+            text.setFont(Font.font(22.0));
+            return text;
         }
     }
-
-
 }

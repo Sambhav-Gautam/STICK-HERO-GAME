@@ -1,5 +1,5 @@
 //Package Name
-package com.example.saadstickhero;
+package com.example.StickHero;
 
 //Header File
 import javafx.animation.FadeTransition;

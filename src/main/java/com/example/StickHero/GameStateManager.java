@@ -1,5 +1,5 @@
 //PACKAGE NAME
-package com.example.saadstickhero;
+package com.example.StickHero;
 
 
 //HEADER FILES

@@ -1,4 +1,4 @@
-package com.example.saadstickhero.Errors;
+package com.example.StickHero.Errors;
 
 /**
  * Exception thrown when the cherry image is not found.

@@ -1,10 +1,13 @@
-package com.example.saadstickhero;
+package com.example.StickHero;
 
 import javafx.animation.FadeTransition;
+import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.TextAlignment;
 import javafx.util.Duration;
 
 /**
@@ -46,7 +49,7 @@ public class ScoreManager {
      * @param score the new score
      */
     public void updateScore(int score) {
-        scoreLabel.setText("Score: " + score);
+        scoreLabel.setText("" + score);
     }
 
     /**
@@ -55,12 +58,24 @@ public class ScoreManager {
      * @return the created Label object
      */
     private Label createScoreLabel() {
-        Label label = new Label("Score: 0");
-        label.setFont(new Font(20));
+        Label label = new Label("0");
+
+        // Set font properties with bold
+        label.setFont(Font.font("Arial", FontWeight.BOLD, 33)); // Adjust font size and family as needed
         label.setTextFill(Color.WHITE);
-        label.setStyle("-fx-background-color: #2c3e50; -fx-padding: 5px; -fx-background-radius: 5px;");
-        label.setLayoutX(300);
-        label.setLayoutY(10);
+
+        // Set label properties
+        label.setPrefSize(100, 50); // Adjust width as needed
+        label.setAlignment(Pos.CENTER); // Center the text horizontally
+        label.setTextAlignment(TextAlignment.CENTER); // Center the text vertically
+
+        // Set background properties
+        label.setStyle("-fx-background-color: rgba(0, 0, 0, 0.5); -fx-padding: 5px; -fx-background-radius: 5px;");
+
+        // Set layout properties
+        label.setLayoutX(250);
+        label.setLayoutY(25);
+
         return label;
     }
 

@@ -1,4 +1,4 @@
-package com.example.saadstickhero;
+package com.example.StickHero;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -15,8 +15,6 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.LinearGradient;
-import javafx.scene.paint.Stop;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.transform.Rotate;
@@ -25,15 +23,16 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
 import java.io.IOException;
-import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 
 
 public class StickHeroController {
-    private int currentScore =0;
+    protected static int currentScore =0;
     private ScoreManager score;
     private Cherry cherry;
 
@@ -44,17 +43,19 @@ public class StickHeroController {
     private AtomicReference<Timeline> stickExtensionTimeline;
     private String stage = "waiting";
     private ImageView heroImageView;
+    private static final ImageView heroImageViewWalk1 = new ImageView(new Image(Objects.requireNonNull(StickHeroController.class.getResourceAsStream("/com/example/StickHero/Images/player_walk1.png"))));
+    private static final ImageView heroImageViewWalk2 = new ImageView(new Image(Objects.requireNonNull(StickHeroController.class.getResourceAsStream("/com/example/StickHero/Images/player_walk2.png"))));
     private double Stick_length;
-    private GameStateManager gameStateManager = new GameStateManager();
+    private final GameStateManager gameStateManager = new GameStateManager();
     private Rectangle Pillar0;
     private Rectangle Pillar1;
     private boolean isNotFlipped = true;
     private boolean isReleased;
     private  String username;
-    private Label highestScoreLabel = null;
 
-    public StickHeroController() throws IOException {
+    public StickHeroController() {
     }
+
 
     private String getUsername() {
         TextInputDialog username = new TextInputDialog();
@@ -66,31 +67,32 @@ public class StickHeroController {
     public  void init() throws IOException {
         username = getUsername();
         if (username == null) {
-
             return;
         }
         gamePane = new Pane();
+
         Scene gameScene = new Scene(gamePane, 600, 700); // Adjust the window width if needed
-        Image bgImage = new Image(getClass().getResourceAsStream("/com/example/saadstickhero/Images/one.png"), 600, 700, false, true);
+
+        Image bgImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/example/StickHero/Images/5386360.jpg")), 600, 700, false, true);
         ImageView backgroundImageView = new ImageView(bgImage);
         backgroundImageView.setFitWidth(600);
         backgroundImageView.setFitHeight(700);
-        Image heroImage = new Image(getClass().getResourceAsStream("/com/example/saadstickhero/Images/player_idle.png"));
+        Image heroImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/example/StickHero/Images/player_idle.png")));
         heroImageView = new ImageView(heroImage);
         heroImageView.setFitWidth(30);
         heroImageView.setFitHeight(30);
         heroImageView.setX(75);
         heroImageView.setY(700 - 135);        double windowHeight = 700; // Height of the window
-        Rectangle pillar1 = createGradientRectangle(50, windowHeight - 100, 50, 100, Color.DARKBLUE);
-        pillar1.setEffect(createDropShadowEffect()); // Apply drop shadow effect
+        Rectangle pillar1 = createGradientRectangle(50, windowHeight - 100, 50);
+
         Random random = new Random();
 
         // Generate a random number in the range 1 to 499
         int randomNumber = random.nextInt(400) + 100;
         int randomNumber1 = random.nextInt(400)+25;
         Rectangle pillar2 = createGradientRectangle(pillar1.getX() + randomNumber + pillar1.getWidth(),
-                windowHeight - 100, randomNumber1, 100, Color.DARKBLUE);
-        pillar2.setEffect(createDropShadowEffect()); // Apply glow effect
+                windowHeight - 100, randomNumber1);
+
         heroImageView = new ImageView(heroImage);
         heroImageView.setFitWidth(30); // Set width of the image
         heroImageView.setFitHeight(30); // Set height of the image
@@ -107,63 +109,73 @@ public class StickHeroController {
         int cherryPosition = random.nextInt((int) (Pillar1.getX()-200))+100;
         cherry = new Cherry(cherryPosition, Pillar1.getY(),gamePane);
         //cherry.addToPane(gamePane);
-        HighestScore ab = new HighestScore(gamePane);
-        Map.Entry<String, Integer> highestScoreEntry = GameStateManager.findHighestScore();
-        if(highestScoreEntry==null){
-            ab.updateScore(0);
-        }
-        else ab.updateScore(highestScoreEntry.getValue());
+        //HighestScore ab = new HighestScore(gamePane);
+        //Map.Entry<String, Integer> highestScoreEntry = GameStateManager.findHighestScore();
+//        if(highestScoreEntry==null){
+//            ab.updateScore(0);
+//        }
+//        else ab.updateScore(highestScoreEntry.getValue());
 
         gameScene.setOnMousePressed(event -> {
-            if (event.getButton() == MouseButton.PRIMARY && stage=="waiting") {
+            if (event.getButton() == MouseButton.PRIMARY && Objects.equals(stage, "waiting")) {
                stickLengthIncrease();
             }
 
         });
         gameScene.setOnMouseClicked(event -> {
-            if (event.getButton() == MouseButton.PRIMARY && stage=="walking") {
-                if (stage.equals("walking") && !isReleased) {
-                    // Check if the character is near the end of the current pillar
-                    double pillarStartX = Pillar1.getX() ; // Assuming the character width is 30
-                    double characterX = heroImageView.getX();
+            if (event.getButton() == MouseButton.PRIMARY && Objects.equals(stage, "walking")) {
+                if (!isReleased) {
+                    double pillarStartX = Pillar1.getX(); // Assuming the character width is 30
+                    double characterX = 0;
+
+                    if (gamePane.getChildren().contains(heroImageView)) {
+                        characterX = heroImageView.getX();
+                    } else if (gamePane.getChildren().contains(heroImageViewWalk1)) {
+                        characterX = heroImageViewWalk1.getX();
+                    } else if (gamePane.getChildren().contains(heroImageViewWalk2)) {
+                        characterX = heroImageViewWalk2.getX();
+                    }
 
                     if (characterX <= pillarStartX) {
                         flipCharacter();
                     }
-                } else if (stage.equals("waiting")) {
-                    // Handle actions when waiting for input, if necessary
                 }
             }
         });
 
 
+
         gameScene.setOnMouseReleased(event -> {
-            if (event.getButton() == MouseButton.PRIMARY && stage=="waiting") {
+            if (event.getButton() == MouseButton.PRIMARY && Objects.equals(stage, "waiting")) {
                 isReleased=true;
-                this.stick = stick;
                 isMousePressed.set(false);
                 stickExtensionTimeline.get().stop();
                 stage = "Falling";
                 fallStick();
                 walkOnStick();
+                Duration.seconds(1);
             }
         });
 
         Stage stage = new Stage();
         stage.setScene(gameScene);
+        stage.setTitle("ANIMAL_HERO_GAME");
+        Image iconImage = new Image(getClass().getResourceAsStream("/com/example/StickHero/Images/one.png")); // Replace with the path to your icon image
+        stage.setResizable(false);
+        stage.getIcons().add(iconImage);
         stage.show();
-//        primaryStage.setScene(gameScene);
-//        primaryStage.show();
     }
     // Method to perform actions when the character reaches the end of the pillar
     private void stickLengthIncrease(){
         stick = new Line();
+
         isMousePressed.set(true);
         stick.setStartX(Pillar0.getX() + Pillar0.getWidth());
         stick.setStartY(Pillar0.getY());
         stick.setEndX(Pillar0.getX() + Pillar0.getWidth());
         stick.setEndY(Pillar0.getY());
         stick.setStroke(Color.BLACK);
+        stick.setStrokeWidth(3);
 
 
         gamePane.getChildren().add(stick);
@@ -179,50 +191,46 @@ public class StickHeroController {
 
     // Method to flip the character vertically
     private void flipCharacter() {
-        double currentScaleY = heroImageView.getScaleY();
         double imageHeight = 30; // Assuming the image height is 30 units
-        if (!isNotFlipped) {
-            heroImageView.setScaleY(1);
-            heroImageView.setTranslateY(heroImageView.getTranslateY() - imageHeight);
-        } else {
-            heroImageView.setScaleY(-1);
-            heroImageView.setTranslateY(heroImageView.getTranslateY() + imageHeight);
+
+        if (gamePane.getChildren().contains(heroImageView)) {
+            if (!isNotFlipped) {
+                heroImageView.setScaleY(1);
+                heroImageView.setTranslateY(heroImageView.getTranslateY() - imageHeight);
+            } else {
+                heroImageView.setScaleY(-1);
+                heroImageView.setTranslateY(heroImageView.getTranslateY() + imageHeight);
+            }
+        } else if (gamePane.getChildren().contains(heroImageViewWalk1)) {
+            if (!isNotFlipped) {
+                heroImageViewWalk1.setScaleY(1);
+                heroImageViewWalk1.setTranslateY(heroImageViewWalk1.getTranslateY() - imageHeight);
+            } else {
+                heroImageViewWalk1.setScaleY(-1);
+                heroImageViewWalk1.setTranslateY(heroImageViewWalk1.getTranslateY() + imageHeight);
+            }
+        } else if (gamePane.getChildren().contains(heroImageViewWalk2)) {
+            if (!isNotFlipped) {
+                heroImageViewWalk2.setScaleY(1);
+                heroImageViewWalk2.setTranslateY(heroImageViewWalk2.getTranslateY() - imageHeight);
+            } else {
+                heroImageViewWalk2.setScaleY(-1);
+                heroImageViewWalk2.setTranslateY(heroImageViewWalk2.getTranslateY() + imageHeight);
+            }
         }
 
         isNotFlipped = !isNotFlipped;
     }
 
-    private Rectangle createGradientRectangle(double x, double y, double width, double height, Color baseColor) {
-        double gradientStopOffset = 0.5;
 
-        // Define gradient stops based on the base color
-        Stop[] stops = new Stop[] {
-                new Stop(0, baseColor),
-                new Stop(gradientStopOffset, baseColor.darker()),
-                new Stop(1, baseColor.brighter())
-        };
-
-        // Create a linear gradient
-        LinearGradient linearGradient = new LinearGradient(0, 0, 1, 0, true, null, stops);
-
-        // Create a rectangle with gradient fill
-        Rectangle rectangle = new Rectangle(x, y, width, height);
-        rectangle.setFill(linearGradient);
-
+    private Rectangle createGradientRectangle(double x, double y, double width) {
+        Rectangle rectangle = new Rectangle(x, y, width, 100);
+        rectangle.setFill(Color.BLACK); // Set the fill color to black
         return rectangle;
     }
 
-    // Function to create a drop shadow effect
-    private DropShadow createDropShadowEffect() {
-        DropShadow dropShadow = new DropShadow();
-        dropShadow.setColor(Color.GRAY);
-        dropShadow.setRadius(5);
-        dropShadow.setOffsetX(3);
-        dropShadow.setOffsetY(3);
-        return dropShadow;
-    }
 
-    // Function to create a glow effect
+
 
     private void fallStick() {
         double stickLength = Math.abs(stick.getEndY() - stick.getStartY());
@@ -239,11 +247,8 @@ public class StickHeroController {
 
         // Calculate the new start point of the stick after rotation
         double rotatedPillarX = pillar1X + pillar1Width;
-        double rotatedPillarY = pillar1Y;
 
         // Calculate stick rotation angle
-        double angle = Math.atan2(stick.getEndY() - stick.getStartY(), stick.getEndX() - stick.getStartX());
-        double degrees = Math.toDegrees(angle);
 
         // Rotate the stick by 90 degrees
         Rotate rotate = new Rotate(90, bottomX, bottomY);
@@ -252,11 +257,11 @@ public class StickHeroController {
 
         // Set the end of the stick to remain parallel to the rectangle's top edge
         stick.setEndX(rotatedPillarX);
-        stick.setEndY(rotatedPillarY - stickLength);
+        stick.setEndY(pillar1Y - stickLength);
 
         // Set the start of the stick to the new rotated position (pillar's edge)
         stick.setStartX(rotatedPillarX);
-        stick.setStartY(rotatedPillarY);
+        stick.setStartY(pillar1Y);
         stage = "walking";
     }
 
@@ -264,12 +269,28 @@ public class StickHeroController {
         stage = "falling";
         double fallDistance = 200;
         Duration duration = Duration.seconds(2);
-        double initialY = heroImageView.getY();
+        double initialY;
+        if(gamePane.getChildren().contains(heroImageView)) {
+            initialY = heroImageView.getY();
+        } else if (gamePane.getChildren().contains(heroImageViewWalk1)) {
+            initialY = heroImageViewWalk1.getY();
+        }else{
+            initialY = heroImageViewWalk2.getY();
+        }
+
         double finalY = initialY + fallDistance;
         // Initialize the Timeline
         Timeline fallTimeline = new Timeline();
-        KeyValue fallKeyValue = new KeyValue(heroImageView.yProperty(), finalY);
-        KeyFrame fallKeyFrame = new KeyFrame(duration, fallKeyValue);
+        KeyFrame fallKeyFrame ;
+        KeyValue fallKeyValue;
+        if(gamePane.getChildren().contains(heroImageView)) {
+               fallKeyValue = new KeyValue(heroImageView.yProperty(), finalY);
+        } else if (gamePane.getChildren().contains(heroImageViewWalk1)) {
+            fallKeyValue = new KeyValue(heroImageViewWalk1.yProperty(), finalY);
+        }else{
+            fallKeyValue = new KeyValue(heroImageViewWalk2.yProperty(), finalY);
+        }
+        fallKeyFrame = new KeyFrame(duration, fallKeyValue);
         // Add key frame to the Timeline for animating the fall movement of the ImageView
         fallTimeline.getKeyFrames().add(fallKeyFrame);
         fallTimeline.play();
@@ -281,9 +302,6 @@ public class StickHeroController {
             // Show the revive and restart pop-up
             showReviveRestartPopup();
         });
-
-
-
     }
 
 
@@ -293,7 +311,7 @@ public class StickHeroController {
         popupStage.setTitle("Revive and Restart");
 
         // Background
-        Image bgImage = new Image(getClass().getResourceAsStream("/com/example/saadstickhero/Images/BG.jpg"), 300, 150, false, true);
+        Image bgImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/example/StickHero/Images/BG.jpg")), 300, 150, false, true);
         ImageView backgroundImageView = new ImageView(bgImage);
         backgroundImageView.setFitWidth(300);
         backgroundImageView.setFitHeight(150);
@@ -304,9 +322,9 @@ public class StickHeroController {
         messageLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: white;");
 
         // Buttons
-        Button reviveButton = createStyledButton("Revive", "#4CAF50");
-        Button restartButton = createStyledButton("Restart", "#4CAF50");
-        Button quitButton = createStyledButton("Quit", "#4CAF50");
+        Button reviveButton = createStyledButton("Revive");
+        Button restartButton = createStyledButton("Restart");
+        Button quitButton = createStyledButton("Quit");
 
         // Button Actions
         reviveButton.setOnAction(event -> {
@@ -341,11 +359,11 @@ public class StickHeroController {
         popupStage.show();
     }
 
-    private Button createStyledButton(String text, String color) {
+    private Button createStyledButton(String text) {
         Button button = new Button(text);
-        button.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-background-color: " + color + "; -fx-text-fill: white;");
+        button.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-background-color: " + "#4CAF50" + "; -fx-text-fill: white;");
         button.setOnMouseEntered(e -> button.setStyle("-fx-background-color: #45a049;"));
-        button.setOnMouseExited(e -> button.setStyle("-fx-background-color: " + color + ";"));
+        button.setOnMouseExited(e -> button.setStyle("-fx-background-color: " + "#4CAF50" + ";"));
         return button;
     }
 
@@ -361,6 +379,23 @@ public class StickHeroController {
         heroImageView.setX(75); // Set X-coordinate
         double windowHeight = 700;
         heroImageView.setY(windowHeight - 135); // Set Y-coordinate
+
+        heroImageViewWalk1.setFitWidth(30); // Set width of the image
+        heroImageViewWalk1.setFitHeight(30); // Set height of the image
+        heroImageViewWalk1.setX(75); // Set X-coordinate
+        heroImageViewWalk1.setY(windowHeight - 135); // Set Y-coordinate
+
+        heroImageViewWalk2.setFitWidth(30); // Set width of the image
+        heroImageViewWalk2.setFitHeight(30); // Set height of the image
+        heroImageViewWalk2.setX(75); // Set X-coordinate
+        heroImageViewWalk2.setY(windowHeight - 135); // Set Y-coordinate
+        if(gamePane.getChildren().contains(heroImageViewWalk1)){
+            gamePane.getChildren().remove(heroImageViewWalk1);
+        }
+        if(gamePane.getChildren().contains(heroImageViewWalk2)){
+            gamePane.getChildren().remove(heroImageViewWalk2);
+        }
+        if(!gamePane.getChildren().contains(heroImageView)) gamePane.getChildren().add(heroImageView);
         score.updateScore(0);
         Cherry.cherryScore =0;
         cherry.updateCherryScore(0);
@@ -418,64 +453,154 @@ public class StickHeroController {
 
 
 
-    private void walkOnStick(){
+    private void walkOnStick() {
+        AtomicInteger walk = new AtomicInteger();
         double stickLength = Stick_length;
-        double startX = this.stick.getStartX();
-        double finalX ;
-        // Final X-coordinate for the Pillar1
-        if(stickLength+stick.getStartX()>=Pillar1.getX() && stickLength+stick.getStartX()<=Pillar1.getX() +Pillar1.getWidth() ){
-            finalX = Pillar1.getX() +Pillar1.getWidth() - 25;
+        double startX = stick.getStartX();
+        double finalX;
+
+
+
+        // Calculate finalX based on stick length and pillar position
+        if (stickLength + startX >= Pillar1.getX() && stickLength + startX <= Pillar1.getX() + Pillar1.getWidth()) {
+            finalX = Pillar1.getX() + Pillar1.getWidth() - 25;
+        } else {
+            finalX = startX + stickLength - 25;
         }
-        else{
-            finalX = startX + stickLength -25 ;
-        }
-        final double increment = 1; // Adjust the increment value for slower/faster movement
-        final double[] currentX = { heroImageView.getX() }; // Current X-coordinate of the hero
-        // Initialize the Timeline
+
+        final double increment = 1;
+        final double[] currentX = { heroImageView.getX() };
+
         Timeline timeline = new Timeline();
-        // Add key frame to the Timeline for animating the movement of the circle
+
+        // Add key frame to the Timeline for animating the movement
         timeline.getKeyFrames().add(
                 new KeyFrame(Duration.millis(5), e -> {
-                    // Update the X-coordinate of the circle
                     currentX[0] += increment;
-                    //TODO
-                    //CHECK THIS
-                    if(!isNotFlipped && cherry.getXPosition()==currentX[0] ){
+
+                    if (!isNotFlipped && cherry.getXPosition() == currentX[0]) {
                         gamePane.getChildren().remove(cherry);
                         cherry.collectCherry(gamePane);
                     }
-                    if(currentX[0]==Pillar1.getX() && !isNotFlipped){
+
+                    if (currentX[0] == Pillar1.getX() && !isNotFlipped) {
                         timeline.stop();
                         characterFall();
                     }
+
                     if (currentX[0] <= finalX) {
-                        heroImageView.setX(currentX[0]);
-                        isReleased= false;
+                        if(walk.get()==0){
+                            int x,y;
+                            int translateX ;
+                            int translateY ;
+                            int scaleX ;
+                            int scaleY ;
+
+                            if(gamePane.getChildren().contains(heroImageView)){
+                                gamePane.getChildren().remove(heroImageView);
+                                x = (int) heroImageView.getX();
+                                y = (int) heroImageView.getY();
+                                translateX = (int) heroImageView.getTranslateX();
+                                translateY = (int) heroImageView.getTranslateY();
+                                scaleX = (int) heroImageView.getScaleX();
+                                scaleY = (int) heroImageView.getScaleY();
+                            }else{
+                                gamePane.getChildren().remove(heroImageViewWalk2);
+                                x = (int) heroImageViewWalk2.getX();
+                                y = (int) heroImageViewWalk2.getY();
+                                translateX = (int) heroImageViewWalk2.getTranslateX();
+                                translateY = (int) heroImageViewWalk2.getTranslateY();
+                                scaleX = (int) heroImageViewWalk2.getScaleX();
+                                scaleY = (int) heroImageViewWalk2.getScaleY();
+                            }
+
+                            heroImageViewWalk1.setX(x);
+                            heroImageViewWalk1.setY(y);
+
+                            heroImageViewWalk1.setFitWidth(30); // Set width of the image
+                            heroImageViewWalk1.setFitHeight(30); // Set height of the image
+                            heroImageViewWalk1.setScaleY(scaleY);
+                            heroImageViewWalk1.setScaleX(scaleX);
+                            heroImageViewWalk1.setTranslateX(translateX);
+                            heroImageViewWalk1.setTranslateY(translateY);
+
+                            gamePane.getChildren().add(heroImageViewWalk1);
+                            heroImageViewWalk1.setX(currentX[0]);
+                            walk.set(1);
+                        }else if(walk.get()==1){
+                            int x = (int) heroImageViewWalk1.getX();
+                            int y = (int) heroImageViewWalk1.getY();
+                            int translateX = (int) heroImageViewWalk1.getTranslateX();
+                            int translateY = (int) heroImageViewWalk1.getTranslateY();
+                            int scaleX = (int) heroImageViewWalk1.getScaleX();
+                            int scaleY = (int) heroImageViewWalk1.getScaleY();
+                            gamePane.getChildren().remove(heroImageViewWalk1);
+                            heroImageViewWalk2.setX(x);
+                            heroImageViewWalk2.setY(y);
+
+                            heroImageViewWalk2.setFitWidth(30); // Set width of the image
+                            heroImageViewWalk2.setFitHeight(30); // Set height of the image
+                            heroImageViewWalk2.setScaleY(scaleY);
+                            heroImageViewWalk2.setScaleX(scaleX);
+                            heroImageViewWalk2.setTranslateX(translateX);
+                            heroImageViewWalk2.setTranslateY(translateY);
+                            gamePane.getChildren().add(heroImageViewWalk2);
+                            heroImageViewWalk2.setX(currentX[0]);
+                            walk.set(0);
+                        }
+
+                        //heroImageView.setX(currentX[0]);
+                        isReleased = false;
                     } else {
+                        int x = (int) heroImageViewWalk1.getX();
+                        int y = (int) heroImageViewWalk1.getY();
+                        int translateX = (int) heroImageViewWalk1.getTranslateX();
+                        int translateY = (int) heroImageViewWalk1.getTranslateY();
+                        int scaleX = (int) heroImageViewWalk1.getScaleX();
+                        int scaleY = (int) heroImageViewWalk1.getScaleY();
+                        if(gamePane.getChildren().contains(heroImageViewWalk1)){
+                            gamePane.getChildren().remove(heroImageViewWalk1);
+                        }
+                        if(gamePane.getChildren().contains(heroImageViewWalk2)){
+                            x = (int) heroImageViewWalk2.getX();
+                            y = (int) heroImageViewWalk2.getY();
+                            translateX = (int) heroImageViewWalk2.getTranslateX();
+                            translateY = (int) heroImageViewWalk2.getTranslateY();
+                            scaleX = (int) heroImageViewWalk2.getScaleX();
+                            scaleY = (int) heroImageViewWalk2.getScaleY();
+                            gamePane.getChildren().remove(heroImageViewWalk2);
+                        }
                         heroImageView.setX(finalX);
-                        timeline.stop(); // Stop the animation when the final position is reached
-                        stage= "waiting";
-                        if(stickLength+stick.getStartX()>=Pillar1.getX() && stickLength+stick.getStartX()<=Pillar1.getX() +Pillar1.getWidth() ){
+                        if(!gamePane.getChildren().contains(heroImageView)){
+                            heroImageView.setX(x);
+                            heroImageView.setY(y);
+
+                            heroImageView.setFitWidth(30); // Set width of the image
+                            heroImageView.setFitHeight(30); // Set height of the image
+                            heroImageView.setScaleY(scaleY);
+                            heroImageView.setScaleX(scaleX);
+                            heroImageView.setTranslateX(translateX);
+                            heroImageView.setTranslateY(translateY);
+                            gamePane.getChildren().add(heroImageView);
+                        }
+                        timeline.stop();
+                        stage = "waiting";
+
+                        if (stickLength + startX >= Pillar1.getX() && stickLength + startX <= Pillar1.getX() + Pillar1.getWidth()) {
                             performPillarTransition();
                             currentScore++;
                             score.updateScore(currentScore);
-                        }
-                        else{
+                        } else {
                             timeline.stop();
                             characterFall();
-
                         }
-
                     }
                 })
         );
 
         timeline.setCycleCount(Timeline.INDEFINITE);
-        // Call performPillarTransition() after walkOnStick() animation finishes
         timeline.play();
     }
-
-
     private void performPillarTransition() {
         stage = "transitioning";
         double stickLength = Stick_length;
@@ -488,12 +613,12 @@ public class StickHeroController {
         // Generate a random number in the range 1 to 499
         int randomNumber = random.nextInt(400) + 100;
         int randomNumber1 = random.nextInt(400)+25;
-        Rectangle newPillar = createGradientRectangle(this.Pillar1.getX()+this.Pillar1.getWidth()+randomNumber, windowHeight - 100, randomNumber1, 100,Color.DARKBLUE);
-        newPillar.setEffect(createDropShadowEffect());
+        Rectangle newPillar = createGradientRectangle(this.Pillar1.getX()+this.Pillar1.getWidth()+randomNumber, windowHeight - 100, randomNumber1);
+
         Timeline timeline = new Timeline();
         gamePane.getChildren().add(newPillar);
         final double[] currentX = { this.Pillar0.getX(), this.Pillar1.getX(), this.stick.getStartX(),newPillar.getX(),stickLength+stick.getStartX(),this.cherry.getXPosition() }; // Current X-coordinate of the hero
-        Duration.seconds(1);
+        Duration seconds = Duration.seconds(1);
 
         // Add key frame to the Timeline for animating the movement of the pillars and stick
         timeline.getKeyFrames().add(
@@ -546,17 +671,6 @@ public class StickHeroController {
 
 
 
-    public double getStick_length() {
-        return Stick_length;
-    }
-
-    public void setStick_length(double stick_length) {
-        Stick_length = stick_length;
-    }
-
-    public int getCurrentScore() {
-        return currentScore;
-    }
 
     public void setCurrentScore(int currentScore) {
         this.currentScore = currentScore;
@@ -565,22 +679,12 @@ public class StickHeroController {
     public void optionsAction() {
     }
 
-    public void loadAction() {
-    }
+    
 
     public void quitAction() {
         Platform.exit();
     }
 
-    public void stopSnowflakes() {
-        StickHeroGame.snowflakesActive =false;
-    }
 
-    public Cherry getCherry() {
-        return cherry;
-    }
-
-    public void setCherry(Cherry cherry) {
-        this.cherry = cherry;
-    }
+    
 }
