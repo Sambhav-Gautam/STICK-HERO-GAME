@@ -31,17 +31,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 //TODO:
-
-//2) Give popup for game operation
 //3) Add sound and music
 //4) Add characters with matching backgrounds
 //5) Add load and save game
-//6) enhance the reset restart and quit
+//6) Enhance the reset restart and quit
 //7) Let the user load the previous state
-//8) pause
+//8) Pause
 //9) Go back to the home screen again
-//10) Enhance username login and add multiple charcters at the same time
+//10) Enhance username login and add multiple characters at the same time
 //11) Try to serialize the class for loading and saving
+
 public class StickHeroController {
     protected static int currentScore =0;
     private ScoreManager score;
@@ -95,7 +94,7 @@ public class StickHeroController {
         heroImageView.setX(75);
         heroImageView.setY(700 - 135);        double windowHeight = 700; // Height of the window
         Rectangle pillar1 = createGradientRectangle(50, windowHeight - 100, 50);
-        Rectangle strip0 = new Rectangle((50+100)/2-5,windowHeight-100,10,7);
+        Rectangle strip0 = new Rectangle((double) (50 + 100) /2-5,windowHeight-100,10,7);
         //(start + (start+width))/2 - strip_width/2
         strip0.setFill(Color.DARKGREEN);
         this.Strip0 = strip0;
@@ -108,7 +107,7 @@ public class StickHeroController {
         int  x = (int) (pillar1.getX() + randomNumber + pillar1.getWidth());
         Rectangle pillar2 = createGradientRectangle(x,
                 windowHeight - 100, randomNumber1);
-        Rectangle strip1 = new Rectangle((x+x+randomNumber1)/2-5,windowHeight-100,10,7);
+        Rectangle strip1 = new Rectangle((double) (x + x + randomNumber1) /2-5,windowHeight-100,10,7);
         strip1.setFill(Color.DARKGREEN);
         this.Strip1 = strip1;
 
@@ -497,7 +496,7 @@ public class StickHeroController {
                 new KeyFrame(Duration.millis(5), e -> {
                     currentX[0] += increment;
 
-                    if (!isNotFlipped && cherry.getXPosition() == currentX[0]) {
+                    if (!isNotFlipped && cherry.getXPosition() == currentX[0] ) {
                         gamePane.getChildren().remove(cherry);
                         cherry.collectCherry(gamePane);
                     }
@@ -698,7 +697,7 @@ public class StickHeroController {
         int x = (int) (this.Pillar1.getX()+this.Pillar1.getWidth()+randomNumber);
         Rectangle newPillar = createGradientRectangle(x, windowHeight - 100, randomNumber1);
 
-        Rectangle newStrip =new Rectangle((2*x+randomNumber1)/2-5,windowHeight-100,10,7);
+        Rectangle newStrip =new Rectangle((double) (2 * x + randomNumber1) /2-5,windowHeight-100,10,7);
         newStrip.setFill(Color.DARKGREEN);
 
         Timeline timeline = new Timeline();
@@ -707,6 +706,7 @@ public class StickHeroController {
                 stickLength+stick.getStartX(),
                 this.cherry.getXPosition(),this.Strip0.getX(),this.Strip1.getX(),newStrip.getX()}; // Current X-coordinate of the hero
         Duration seconds = Duration.seconds(1);
+        System.out.println(seconds);
 
         // Add key frame to the Timeline for animating the movement of the pillars and stick
         timeline.getKeyFrames().add(
@@ -785,19 +785,4 @@ public class StickHeroController {
     }
 
 
-    public Rectangle getStrip0() {
-        return Strip0;
-    }
-
-    public void setStrip0(Rectangle strip0) {
-        Strip0 = strip0;
-    }
-
-    public Rectangle getStrip1() {
-        return Strip1;
-    }
-
-    public void setStrip1(Rectangle strip1) {
-        Strip1 = strip1;
-    }
 }

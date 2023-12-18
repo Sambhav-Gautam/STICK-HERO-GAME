@@ -49,7 +49,7 @@ public class ScoreManager {
      * @param score the new score
      */
     public void updateScore(int score) {
-        scoreLabel.setText("" + score);
+        scoreLabel.setText(String.valueOf(score));
     }
 
     /**
