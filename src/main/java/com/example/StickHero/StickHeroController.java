@@ -17,6 +17,7 @@ import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
 import javafx.scene.transform.Rotate;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -30,7 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 //TODO:
-//1) Make Bonus Rectangle
+
 //2) Give popup for game operation
 //3) Add sound and music
 //4) Add characters with matching backgrounds
@@ -121,7 +122,15 @@ public class StickHeroController {
         stickExtensionTimeline = new AtomicReference<>(new Timeline());
 
 
-        gamePane.getChildren().addAll(new ImageView(bgImage),pillar1, pillar2, heroImageView,strip0,strip1);
+
+        Text Hint = new Text("Press Mouse Key To Begin !!!");
+        Hint.setTextAlignment(TextAlignment.CENTER);
+        Hint.setFill(Color.BLACK);
+        Hint.setFont(Font.font(25));
+        // Position the bonus text (you may need to adjust the coordinates)
+        Hint.setLayoutX(175);
+        Hint.setLayoutY(121);
+        gamePane.getChildren().addAll(new ImageView(bgImage),pillar1, pillar2, heroImageView,strip0,strip1,Hint);
         score =  ScoreManager.getInstance(gamePane);
         this.Pillar0 = pillar1;
         this.Pillar1 = pillar2;
@@ -131,7 +140,8 @@ public class StickHeroController {
 
         gameScene.setOnMousePressed(event -> {
             if (event.getButton() == MouseButton.PRIMARY && Objects.equals(stage, "waiting")) {
-               stickLengthIncrease();
+                gamePane.getChildren().remove(Hint);
+                stickLengthIncrease();
             }
 
         });
@@ -592,7 +602,7 @@ public class StickHeroController {
                         }
                         timeline.stop();
                         stage = "waiting";
-                       
+
                         if (stickLength + startX >= Pillar1.getX() && stickLength + startX <= Pillar1.getX() + Pillar1.getWidth()) {
                             performPillarTransition();
 
@@ -619,13 +629,15 @@ public class StickHeroController {
         timeline.play();
     }
     private void showBonusText() {
-        Text bonusText = new Text("Perfect!");
-        bonusText.setFill(Color.BLACK);
-        bonusText.setFont(Font.font(30));
 
-        // Position the bonus text (you may need to adjust the coordinates)
-        bonusText.setLayoutX(250);
-        bonusText.setLayoutY(111);
+            Text bonusText = new Text("Perfect!");
+            bonusText.setTextAlignment(TextAlignment.CENTER);
+            bonusText.setFill(Color.BLACK);
+            bonusText.setFont(Font.font(30));
+
+            // Position the bonus text (you may need to adjust the coordinates)
+            bonusText.setLayoutX(250);
+            bonusText.setLayoutY(111);
 
         // Add the bonus text to your gamePane
         gamePane.getChildren().add(bonusText);
