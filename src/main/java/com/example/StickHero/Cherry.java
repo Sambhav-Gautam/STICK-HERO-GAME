@@ -4,7 +4,6 @@ package com.example.StickHero;
 //HEADER FILES
 import com.example.StickHero.Errors.CherryImageNotFoundException;
 import javafx.animation.FadeTransition;
-import javafx.scene.control.Label;
 import javafx.scene.effect.Glow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -48,7 +47,7 @@ public class Cherry {
      * @param gamePane  the game pane where the cherry will be displayed
      */
     public Cherry(double stickTopX, double stickTopY, Pane gamePane) {
-        Image cherryImage = loadImage(Cherry.CHERRY_IMAGE_PATH);
+        Image cherryImage = loadImage();
 
         cherryImageView = new ImageView(cherryImage);
         cherryImageView.setFitWidth(CHERRY_SIZE);
@@ -77,10 +76,10 @@ public class Cherry {
      *
      * @return the loaded Image object
      */
-    private Image loadImage(String imagePath) {
-        try (InputStream stream = getClass().getResourceAsStream(imagePath)) {
+    private Image loadImage() {
+        try (InputStream stream = getClass().getResourceAsStream(Cherry.CHERRY_IMAGE_PATH)) {
             if (stream == null) {
-                throw new CherryImageNotFoundException("Cherry image not found: " + imagePath);
+                throw new CherryImageNotFoundException("Cherry image not found: " + Cherry.CHERRY_IMAGE_PATH);
             }
             return new Image(stream);
         } catch (CherryImageNotFoundException | IOException e) {
@@ -111,7 +110,7 @@ public class Cherry {
      * @return the created Label object
      */
     private ImageView createCherryImageView() {
-        Image cherryImage = loadImage(Cherry.CHERRY_IMAGE_PATH);
+        Image cherryImage = loadImage();
 
         ImageView imageView = new ImageView(cherryImage);
         imageView.setFitWidth(CHERRY_SIZE_LABEL);
@@ -178,7 +177,7 @@ public class Cherry {
      * @param score the new cherry score
      */
     public void updateCherryScore(int score) {
-        cherryScoreText.setText("" + score);
+        cherryScoreText.setText(String.valueOf(score));
     }
 
     /**

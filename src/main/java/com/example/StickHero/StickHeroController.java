@@ -1,8 +1,6 @@
 package com.example.StickHero;
 
-import javafx.animation.KeyFrame;
-import javafx.animation.KeyValue;
-import javafx.animation.Timeline;
+import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -17,6 +15,8 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import javafx.scene.transform.Rotate;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -29,14 +29,22 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-
-
+//TODO:
+//1) Make Bonus Rectangle
+//2) Give popup for game operation
+//3) Add sound and music
+//4) Add characters with matching backgrounds
+//5) Add load and save game
+//6) enhance the reset restart and quit
+//7) Let the user load the previous state
+//8) pause
+//9) Go back to the home screen again
+//10) Enhance username login and add multiple charcters at the same time
+//11) Try to serialize the class for loading and saving
 public class StickHeroController {
     protected static int currentScore =0;
     private ScoreManager score;
     private Cherry cherry;
-
-
     private Pane gamePane;
     private Line stick;
     private AtomicBoolean isMousePressed;
@@ -48,7 +56,9 @@ public class StickHeroController {
     private double Stick_length;
     private final GameStateManager gameStateManager = new GameStateManager();
     private Rectangle Pillar0;
+    private Rectangle Strip0;
     private Rectangle Pillar1;
+    private Rectangle Strip1;
     private boolean isNotFlipped = true;
     private boolean isReleased;
     private  String username;
@@ -84,14 +94,23 @@ public class StickHeroController {
         heroImageView.setX(75);
         heroImageView.setY(700 - 135);        double windowHeight = 700; // Height of the window
         Rectangle pillar1 = createGradientRectangle(50, windowHeight - 100, 50);
+        Rectangle strip0 = new Rectangle((50+100)/2-5,windowHeight-100,10,7);
+        //(start + (start+width))/2 - strip_width/2
+        strip0.setFill(Color.DARKGREEN);
+        this.Strip0 = strip0;
 
         Random random = new Random();
 
         // Generate a random number in the range 1 to 499
         int randomNumber = random.nextInt(400) + 100;
         int randomNumber1 = random.nextInt(400)+25;
-        Rectangle pillar2 = createGradientRectangle(pillar1.getX() + randomNumber + pillar1.getWidth(),
+        int  x = (int) (pillar1.getX() + randomNumber + pillar1.getWidth());
+        Rectangle pillar2 = createGradientRectangle(x,
                 windowHeight - 100, randomNumber1);
+        Rectangle strip1 = new Rectangle((x+x+randomNumber1)/2-5,windowHeight-100,10,7);
+        strip1.setFill(Color.DARKGREEN);
+        this.Strip1 = strip1;
+
 
         heroImageView = new ImageView(heroImage);
         heroImageView.setFitWidth(30); // Set width of the image
@@ -102,19 +121,13 @@ public class StickHeroController {
         stickExtensionTimeline = new AtomicReference<>(new Timeline());
 
 
-        gamePane.getChildren().addAll(new ImageView(bgImage),pillar1, pillar2, heroImageView);
+        gamePane.getChildren().addAll(new ImageView(bgImage),pillar1, pillar2, heroImageView,strip0,strip1);
         score =  ScoreManager.getInstance(gamePane);
         this.Pillar0 = pillar1;
         this.Pillar1 = pillar2;
         int cherryPosition = random.nextInt((int) (Pillar1.getX()-200))+100;
         cherry = new Cherry(cherryPosition, Pillar1.getY(),gamePane);
-        //cherry.addToPane(gamePane);
-        //HighestScore ab = new HighestScore(gamePane);
-        //Map.Entry<String, Integer> highestScoreEntry = GameStateManager.findHighestScore();
-//        if(highestScoreEntry==null){
-//            ab.updateScore(0);
-//        }
-//        else ab.updateScore(highestScoreEntry.getValue());
+
 
         gameScene.setOnMousePressed(event -> {
             if (event.getButton() == MouseButton.PRIMARY && Objects.equals(stage, "waiting")) {
@@ -153,14 +166,13 @@ public class StickHeroController {
                 stage = "Falling";
                 fallStick();
                 walkOnStick();
-                Duration.seconds(1);
             }
         });
 
         Stage stage = new Stage();
         stage.setScene(gameScene);
         stage.setTitle("ANIMAL_HERO_GAME");
-        Image iconImage = new Image(getClass().getResourceAsStream("/com/example/StickHero/Images/one.png")); // Replace with the path to your icon image
+        Image iconImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/example/StickHero/Images/one.png"))); // Replace with the path to your icon image
         stage.setResizable(false);
         stage.getIcons().add(iconImage);
         stage.show();
@@ -226,6 +238,7 @@ public class StickHeroController {
     private Rectangle createGradientRectangle(double x, double y, double width) {
         Rectangle rectangle = new Rectangle(x, y, width, 100);
         rectangle.setFill(Color.BLACK); // Set the fill color to black
+
         return rectangle;
     }
 
@@ -389,12 +402,8 @@ public class StickHeroController {
         heroImageViewWalk2.setFitHeight(30); // Set height of the image
         heroImageViewWalk2.setX(75); // Set X-coordinate
         heroImageViewWalk2.setY(windowHeight - 135); // Set Y-coordinate
-        if(gamePane.getChildren().contains(heroImageViewWalk1)){
-            gamePane.getChildren().remove(heroImageViewWalk1);
-        }
-        if(gamePane.getChildren().contains(heroImageViewWalk2)){
-            gamePane.getChildren().remove(heroImageViewWalk2);
-        }
+        gamePane.getChildren().remove(heroImageViewWalk1);
+        gamePane.getChildren().remove(heroImageViewWalk2);
         if(!gamePane.getChildren().contains(heroImageView)) gamePane.getChildren().add(heroImageView);
         score.updateScore(0);
         Cherry.cherryScore =0;
@@ -558,9 +567,7 @@ public class StickHeroController {
                         int translateY = (int) heroImageViewWalk1.getTranslateY();
                         int scaleX = (int) heroImageViewWalk1.getScaleX();
                         int scaleY = (int) heroImageViewWalk1.getScaleY();
-                        if(gamePane.getChildren().contains(heroImageViewWalk1)){
-                            gamePane.getChildren().remove(heroImageViewWalk1);
-                        }
+                        gamePane.getChildren().remove(heroImageViewWalk1);
                         if(gamePane.getChildren().contains(heroImageViewWalk2)){
                             x = (int) heroImageViewWalk2.getX();
                             y = (int) heroImageViewWalk2.getY();
@@ -585,10 +592,20 @@ public class StickHeroController {
                         }
                         timeline.stop();
                         stage = "waiting";
-
+                       
                         if (stickLength + startX >= Pillar1.getX() && stickLength + startX <= Pillar1.getX() + Pillar1.getWidth()) {
                             performPillarTransition();
-                            currentScore++;
+
+                            if ((stickLength + startX >= Strip0.getX() && stickLength + startX <= Strip0.getX()+10) || (stickLength + startX >= Strip1.getX() && stickLength + startX <= Strip1.getX()+10)) {
+                                // Stick is in the range of strip0, increase the score by +2
+                                showBonusText();
+                                showBonusTextAnimation(true);
+                                currentScore += 2;
+                            }
+                            else {
+                                currentScore++;
+                                showBonusTextAnimation(false);
+                            }
                             score.updateScore(currentScore);
                         } else {
                             timeline.stop();
@@ -601,6 +618,59 @@ public class StickHeroController {
         timeline.setCycleCount(Timeline.INDEFINITE);
         timeline.play();
     }
+    private void showBonusText() {
+        Text bonusText = new Text("Perfect!");
+        bonusText.setFill(Color.BLACK);
+        bonusText.setFont(Font.font(30));
+
+        // Position the bonus text (you may need to adjust the coordinates)
+        bonusText.setLayoutX(250);
+        bonusText.setLayoutY(111);
+
+        // Add the bonus text to your gamePane
+        gamePane.getChildren().add(bonusText);
+
+        // Set up a timeline to fade out and remove the bonus text after a short duration
+        Timeline bonusTimeline = new Timeline(
+                new KeyFrame(Duration.seconds(2), new KeyValue(bonusText.opacityProperty(), 0))
+        );
+        bonusTimeline.setOnFinished(event -> gamePane.getChildren().remove(bonusText));
+        bonusTimeline.play();
+    }
+    // Function to show bonus text pop-up with animation
+    private void showBonusTextAnimation(Boolean value) {
+        Text bonusText;
+        if(value)  bonusText = new Text("+2");
+        else bonusText = new Text("+1");
+        bonusText.setFill(Color.BLACK);
+        bonusText.setFont(Font.font(20));
+
+        // Position the bonus text at the center of the strip
+        double bonusTextX = (Strip1.getX() + Strip1.getX() + 10) / 2 - bonusText.getBoundsInLocal().getWidth() / 2;
+        double bonusTextY = Strip1.getY() - 20; // Adjust the Y position as needed
+
+        bonusText.setLayoutX(bonusTextX);
+        bonusText.setLayoutY(bonusTextY);
+
+        // Add the bonus text to your gamePane
+        gamePane.getChildren().add(bonusText);
+
+        // Create a translation animation for the bonus text
+        TranslateTransition translateTransition = new TranslateTransition(Duration.seconds(1), bonusText);
+        translateTransition.setByY(-50); // Adjust the distance the text moves up
+        translateTransition.setInterpolator(Interpolator.EASE_OUT);
+
+        // Set up a timeline to fade out and remove the bonus text after a short duration
+        Timeline bonusTimeline = new Timeline(
+                new KeyFrame(Duration.seconds(1), new KeyValue(bonusText.opacityProperty(), 0))
+        );
+        bonusTimeline.setOnFinished(event -> gamePane.getChildren().remove(bonusText));
+
+        // Play the translation animation and fade-out timeline in sequence
+        translateTransition.setOnFinished(event -> bonusTimeline.play());
+        translateTransition.play();
+    }
+
     private void performPillarTransition() {
         stage = "transitioning";
         double stickLength = Stick_length;
@@ -613,11 +683,17 @@ public class StickHeroController {
         // Generate a random number in the range 1 to 499
         int randomNumber = random.nextInt(400) + 100;
         int randomNumber1 = random.nextInt(400)+25;
-        Rectangle newPillar = createGradientRectangle(this.Pillar1.getX()+this.Pillar1.getWidth()+randomNumber, windowHeight - 100, randomNumber1);
+        int x = (int) (this.Pillar1.getX()+this.Pillar1.getWidth()+randomNumber);
+        Rectangle newPillar = createGradientRectangle(x, windowHeight - 100, randomNumber1);
+
+        Rectangle newStrip =new Rectangle((2*x+randomNumber1)/2-5,windowHeight-100,10,7);
+        newStrip.setFill(Color.DARKGREEN);
 
         Timeline timeline = new Timeline();
-        gamePane.getChildren().add(newPillar);
-        final double[] currentX = { this.Pillar0.getX(), this.Pillar1.getX(), this.stick.getStartX(),newPillar.getX(),stickLength+stick.getStartX(),this.cherry.getXPosition() }; // Current X-coordinate of the hero
+        gamePane.getChildren().addAll(newPillar,newStrip);
+        final double[] currentX = { this.Pillar0.getX(), this.Pillar1.getX(), this.stick.getStartX(),newPillar.getX(),
+                stickLength+stick.getStartX(),
+                this.cherry.getXPosition(),this.Strip0.getX(),this.Strip1.getX(),newStrip.getX()}; // Current X-coordinate of the hero
         Duration seconds = Duration.seconds(1);
 
         // Add key frame to the Timeline for animating the movement of the pillars and stick
@@ -630,8 +706,11 @@ public class StickHeroController {
                     currentX[3] -= decrement;
                     currentX[4] +=decrement;
                     currentX[5] -= decrement;
+                    currentX[6] -= decrement;
+                    currentX[7] -=decrement;
+                    currentX[8] -=decrement;
                     totalDecrement[0] += decrement;
-                    //if (currentX[0] >= startX - 100 || currentX[1] > startX) {
+
                     if (currentX[1]!=100-Pillar1.getWidth()) {
                         newPillar.setX(currentX[3]);
                         this.Pillar0.setX(currentX[0]);
@@ -639,7 +718,13 @@ public class StickHeroController {
                         this.cherry.setXPosition(currentX[5]);
                         this.heroImageView.setX(currentX[1]+ this.Pillar1.getWidth()- 25);
                         this.stick.setTranslateX(-totalDecrement[0]);
+                        this.Strip0.setX(currentX[6]);
+                        this.Strip1.setX(currentX[7]);
+                        newStrip.setX(currentX[8]);
                     } else {
+                        this.Strip0.setX(currentX[6]);
+                        this.Strip1.setX(currentX[7]);
+                        newStrip.setX(currentX[8]);
                         newPillar.setX(currentX[3]);
                         this.cherry.setXPosition(currentX[5]);
                         this.Pillar0.setX(startX - 1000);
@@ -653,6 +738,8 @@ public class StickHeroController {
                         gamePane.getChildren().remove(Pillar0);
                         this.Pillar0 = this.Pillar1;
                         this.Pillar1 = newPillar;
+                        this.Strip0 = this.Strip1;
+                        this.Strip1 = newStrip;
                         stick.setStartX(Pillar0.getX() + Pillar0.getWidth());
                         stick.setStartY(Pillar0.getY());
                         stick.setEndX(Pillar0.getX() + Pillar0.getWidth());
@@ -673,7 +760,7 @@ public class StickHeroController {
 
 
     public void setCurrentScore(int currentScore) {
-        this.currentScore = currentScore;
+        StickHeroController.currentScore = currentScore;
     }
 
     public void optionsAction() {
@@ -686,5 +773,19 @@ public class StickHeroController {
     }
 
 
-    
+    public Rectangle getStrip0() {
+        return Strip0;
+    }
+
+    public void setStrip0(Rectangle strip0) {
+        Strip0 = strip0;
+    }
+
+    public Rectangle getStrip1() {
+        return Strip1;
+    }
+
+    public void setStrip1(Rectangle strip1) {
+        Strip1 = strip1;
+    }
 }
