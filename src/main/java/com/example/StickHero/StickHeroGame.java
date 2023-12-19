@@ -35,6 +35,7 @@ public class StickHeroGame extends Application {
     public void start(Stage primaryStage) {
         StickHeroController controller = new StickHeroController();
         primaryStage.setScene(new Scene(createContent(controller,primaryStage)));
+        StickHeroController.setPrimaryStage(primaryStage);
         primaryStage.show();
     }
     private void showLoadPopup() throws IOException {

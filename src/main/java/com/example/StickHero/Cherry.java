@@ -3,6 +3,7 @@ package com.example.StickHero;
 
 //HEADER FILES
 import com.example.StickHero.Errors.CherryImageNotFoundException;
+import com.example.StickHero.Music.SoundPlayer;
 import javafx.animation.FadeTransition;
 import javafx.scene.effect.Glow;
 import javafx.scene.image.Image;
@@ -142,6 +143,7 @@ public class Cherry {
      * @param gamePane the game pane from which the cherry is collected
      */
     public void collectCherry(Pane gamePane) {
+        SoundPlayer.playSound("src/main/resources/com.example.StickHero.Music/Eating.mp3",1.0);
         cherryScore++;
         updateCherryScore(cherryScore);
         gamePane.getChildren().remove(cherryImageView);

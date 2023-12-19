@@ -1,16 +1,19 @@
 package com.example.StickHero;
 
+import com.example.StickHero.Music.SoundPlayer;
+import com.example.StickHero.Music.SoundPlayerGame;
 import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.*;
+import javafx.scene.effect.ColorAdjust;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
@@ -30,14 +33,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+
 //TODO:
-//3) Add sound and music
 //4) Add characters with matching backgrounds
 //5) Add load and save game
-//6) Enhance the reset restart and quit
 //7) Let the user load the previous state
-//8) Pause
-//9) Go back to the home screen again
 //10) Enhance username login and add multiple characters at the same time
 //11) Try to serialize the class for loading and saving
 
@@ -48,6 +48,9 @@ public class StickHeroController {
     private Pane gamePane;
     private Line stick;
     private AtomicBoolean isMousePressed;
+    private final SoundPlayer soundPlayer = new SoundPlayer("src/main/resources/com.example.StickHero.Music/funnySound.mp3","src/main/resources/com.example.StickHero.Music/sadMusic.mp3");
+    private final SoundPlayerGame soundPlayergame = new SoundPlayerGame("src/main/resources/com.example.StickHero.Music/Faded.mp3");
+
     private AtomicReference<Timeline> stickExtensionTimeline;
     private String stage = "waiting";
     private ImageView heroImageView;
@@ -61,28 +64,19 @@ public class StickHeroController {
     private Rectangle Strip1;
     private boolean isNotFlipped = true;
     private boolean isReleased;
-    private  String username;
+    static Stage primaryStage;
+    private String username;
+    private Stage currStage;
 
     public StickHeroController() {
     }
 
-
-    private String getUsername() {
-        TextInputDialog username = new TextInputDialog();
-        username.setTitle("Username");
-        username.setHeaderText("Enter your username:");
-        username.initStyle(StageStyle.UTILITY);
-        return username.showAndWait().orElse(null);
+    public static void setPrimaryStage(Stage primaryStage) {
+        StickHeroController.primaryStage = primaryStage;
     }
     public  void init() throws IOException {
-        username = getUsername();
-        if (username == null) {
-            return;
-        }
         gamePane = new Pane();
-
         Scene gameScene = new Scene(gamePane, 600, 700); // Adjust the window width if needed
-
         Image bgImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/example/StickHero/Images/5386360.jpg")), 600, 700, false, true);
         ImageView backgroundImageView = new ImageView(bgImage);
         backgroundImageView.setFitWidth(600);
@@ -147,6 +141,7 @@ public class StickHeroController {
         gameScene.setOnMouseClicked(event -> {
             if (event.getButton() == MouseButton.PRIMARY && Objects.equals(stage, "walking")) {
                 if (!isReleased) {
+                    SoundPlayer.playSound("src/main/resources/com.example.StickHero.Music/flip.mp3",1.0);
                     double pillarStartX = Pillar1.getX(); // Assuming the character width is 30
                     double characterX = 0;
 
@@ -184,6 +179,9 @@ public class StickHeroController {
         Image iconImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/example/StickHero/Images/one.png"))); // Replace with the path to your icon image
         stage.setResizable(false);
         stage.getIcons().add(iconImage);
+        currStage = stage;
+        soundPlayergame.playRandomSound();
+
         stage.show();
     }
     // Method to perform actions when the character reaches the end of the pillar
@@ -288,9 +286,11 @@ public class StickHeroController {
     }
 
     private void characterFall() {
+        soundPlayergame.stopAllSounds();
+        soundPlayer.playRandomSound();
         stage = "falling";
         double fallDistance = 200;
-        Duration duration = Duration.seconds(2);
+        Duration duration = Duration.seconds(10);
         double initialY;
         if(gamePane.getChildren().contains(heroImageView)) {
             initialY = heroImageView.getY();
@@ -299,7 +299,6 @@ public class StickHeroController {
         }else{
             initialY = heroImageViewWalk2.getY();
         }
-
         double finalY = initialY + fallDistance;
         // Initialize the Timeline
         Timeline fallTimeline = new Timeline();
@@ -322,7 +321,10 @@ public class StickHeroController {
             // Show the revive and restart pop-up
         fallTimeline.setOnFinished(event -> {
             // Show the revive and restart pop-up
+           // mediaPlayer.stop();
+            soundPlayer.stopAllSounds();
             showReviveRestartPopup();
+
         });
     }
 
@@ -330,68 +332,134 @@ public class StickHeroController {
     private void showReviveRestartPopup() {
         Stage popupStage = new Stage();
         popupStage.initModality(Modality.APPLICATION_MODAL);
+        popupStage.initStyle(StageStyle.TRANSPARENT); // Set to transparent
         popupStage.setTitle("Revive and Restart");
 
-        // Background
-        Image bgImage = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/com/example/StickHero/Images/BG.jpg")), 300, 150, false, true);
-        ImageView backgroundImageView = new ImageView(bgImage);
-        backgroundImageView.setFitWidth(300);
-        backgroundImageView.setFitHeight(150);
-
-
-        // Message Label
         Label messageLabel = new Label("Do you want to revive and continue?");
-        messageLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: white;");
+        messageLabel.setStyle("-fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #ffffff;");
 
-        // Buttons
+
         Button reviveButton = createStyledButton("Revive");
         Button restartButton = createStyledButton("Restart");
         Button quitButton = createStyledButton("Quit");
+        Button homeButton = createStyledButton("Home");
+
+        homeButton.setOnAction(event ->{
+            SoundPlayer.playSound("src/main/resources/com.example.StickHero.Music/clickSound.mp3",1);
+            popupStage.close();
+            currStage.close();
+            primaryStage.show();
+        });
 
         // Button Actions
         reviveButton.setOnAction(event -> {
+            SoundPlayer.playSound("src/main/resources/com.example.StickHero.Music/clickSound.mp3",1);
             // Handle the revive option
             reviveAndContinue();
             popupStage.close();
         });
 
         restartButton.setOnAction(event -> {
+            SoundPlayer.playSound("src/main/resources/com.example.StickHero.Music/clickSound.mp3",1);
             // Handle the restart option
             restartGame();
             popupStage.close();
         });
 
         quitButton.setOnAction(event -> {
-            gameStateManager.updateScore(username,Cherry.cherryScore);
+            SoundPlayer.playSound("src/main/resources/com.example.StickHero.Music/clickSound.mp3",1);
+            gameStateManager.updateScore(username, Cherry.cherryScore);
+            popupStage.close();
             Platform.exit();
+
         });
 
-        // Layout
-        VBox popupLayout = new VBox(10);
-        popupLayout.getChildren().addAll(messageLabel, reviveButton, restartButton, quitButton);
-        popupLayout.setBackground(new Background(new BackgroundFill(Color.BLACK, null, null)));
+        VBox popupLayout = new VBox(20);
+        popupLayout.getChildren().addAll(messageLabel, reviveButton, restartButton, quitButton,homeButton);
+
+        // Set a transparent background
+        popupLayout.setStyle("-fx-background-color: transparent;");
+
         popupLayout.setPadding(new Insets(20));
         popupLayout.setEffect(new DropShadow());
 
-        StackPane root = new StackPane();
-        root.getChildren().addAll(backgroundImageView, popupLayout);
+        setHoverSound(reviveButton);
+        setHoverSound(restartButton);
+        setHoverSound(quitButton);
+        setHoverSound(homeButton);
 
-        Scene popupScene = new Scene(root, 300, 150);
+        // Center the popup
+        popupLayout.setAlignment(Pos.CENTER);
+
+        Scene popupScene = new Scene(popupLayout, 800, 600); // Adjust the size as needed
+        popupScene.setFill(Color.TRANSPARENT); // Set the scene to transparent
+
         popupStage.setScene(popupScene);
+
+        // Remove default close button
+        popupScene.setOnMouseClicked(event -> {
+            // No close action here, as it's handled by the buttons
+        });
+
         popupStage.show();
     }
 
+    private void setHoverSound(Button button) {
+        button.setOnMouseEntered(event -> SoundPlayer.playSound("src/main/resources/com.example.StickHero.Music/hoverSound.mp3",1));
+    }
+
+
+
     private Button createStyledButton(String text) {
         Button button = new Button(text);
-        button.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-background-color: " + "#4CAF50" + "; -fx-text-fill: white;");
-        button.setOnMouseEntered(e -> button.setStyle("-fx-background-color: #45a049;"));
-        button.setOnMouseExited(e -> button.setStyle("-fx-background-color: " + "#4CAF50" + ";"));
+        button.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-background-color: #4CAF50; -fx-text-fill: white;");
+        button.setMinSize(120, 40); // Set the initial size of the button
+
+        // Add a drop shadow effect
+        DropShadow shadow = new DropShadow();
+        button.addEventHandler(MouseEvent.MOUSE_ENTERED, e -> button.setEffect(shadow));
+        button.addEventHandler(MouseEvent.MOUSE_EXITED, e -> button.setEffect(null));
+
+        // Button color transition animation
+        Duration duration = Duration.millis(200);
+        ColorAdjust colorAdjust = new ColorAdjust();
+        button.addEventHandler(MouseEvent.MOUSE_PRESSED, e -> {
+            Timeline timeline = new Timeline(
+                    new KeyFrame(Duration.ZERO, new KeyValue(colorAdjust.brightnessProperty(), 0)),
+                    new KeyFrame(duration, new KeyValue(colorAdjust.brightnessProperty(), -0.5))
+            );
+            timeline.play();
+        });
+
+        button.addEventHandler(MouseEvent.MOUSE_RELEASED, e -> {
+            Timeline timeline = new Timeline(
+                    new KeyFrame(Duration.ZERO, new KeyValue(colorAdjust.brightnessProperty(), -0.5)),
+                    new KeyFrame(duration, new KeyValue(colorAdjust.brightnessProperty(), 0))
+            );
+            timeline.play();
+        });
+
+        // Button scale transition animation
+        ScaleTransition scaleTransition = new ScaleTransition(Duration.millis(100), button);
+        scaleTransition.setFromX(1.0);
+        scaleTransition.setFromY(1.0);
+        scaleTransition.setToX(1.1);
+        scaleTransition.setToY(1.1);
+
+        button.addEventHandler(MouseEvent.MOUSE_ENTERED, e -> scaleTransition.playFromStart());
+
+        button.addEventHandler(MouseEvent.MOUSE_EXITED, e -> {
+            scaleTransition.stop();
+            button.setScaleX(1.0);
+            button.setScaleY(1.0);
+        });
+
         return button;
     }
 
 
-
     private void restartGame() {
+        soundPlayergame.playRandomSound();
         if(!isNotFlipped) flipCharacter();
         isNotFlipped = true;
         this.setCurrentScore(0);
@@ -472,6 +540,8 @@ public class StickHeroController {
 
 
     private void walkOnStick() {
+        SoundPlayer.playSound1("src/main/resources/com.example.StickHero.Music/running.mp3");
+
         AtomicInteger walk = new AtomicInteger();
         double stickLength = Stick_length;
         double startX = stick.getStartX();
@@ -599,6 +669,7 @@ public class StickHeroController {
                             heroImageView.setTranslateY(translateY);
                             gamePane.getChildren().add(heroImageView);
                         }
+                        SoundPlayer.stopSound();
                         timeline.stop();
                         stage = "waiting";
 
@@ -607,11 +678,13 @@ public class StickHeroController {
 
                             if ((stickLength + startX >= Strip0.getX() && stickLength + startX <= Strip0.getX()+10) || (stickLength + startX >= Strip1.getX() && stickLength + startX <= Strip1.getX()+10)) {
                                 // Stick is in the range of strip0, increase the score by +2
+                                SoundPlayer.playSound("src/main/resources/com.example.StickHero.Music/extraBonus.mp3",1.5);
                                 showBonusText();
                                 showBonusTextAnimation(true);
                                 currentScore += 2;
                             }
                             else {
+                                SoundPlayer.playSound("src/main/resources/com.example.StickHero.Music/bonus.mp3",1.5);
                                 currentScore++;
                                 showBonusTextAnimation(false);
                             }
