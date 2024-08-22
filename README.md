@@ -1,8 +1,18 @@
-STICK HERO GAME MADE IN JAVAFX
-PRESS THE MOUSE BUTTON THE STICK WILL START GROWING.
-WAIT FOR APPROPRIATE LENGTH GROWTH.
-THEN REALSE THE MOUSE KEY THE STICK WILL FALL.
-THE CHARACTER WILL START WALKING WHEN THE CHARCTER IS WALKING YOU CAN CLICK THE MOUSE TO INVERT IT TO COLLECT CHERRIES.
-TRY NOT TO COLLIDE WITH THE PILLAR ..
-MADE BY : SAMBHAV GAUTAM
-ADDITIONAL FEATURES ARE UDNER DEVELOPMENT ..
+🎮 Stick Hero Game
+Made with Java & JavaFX
+
+🖱️ Mouse Control:
+
+Press the mouse button to grow the stick.
+Release it when you think the stick is long enough to reach the next pillar.
+🚶 Character Movement:
+
+Watch your character walk across the stick after you release it.
+While walking, click the mouse to invert the character and collect cherries. 🍒
+⚠️ Avoid Obstacles:
+
+Be careful not to collide with the pillars!
+🔧 Additional Features:
+
+More exciting features are under development!
+Made by: Sambhav Gautam and Sameer Singh Godara
