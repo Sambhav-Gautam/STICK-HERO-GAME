@@ -1,6 +1,13 @@
 ### 🎮 Stick Hero Game
 Made with Java & JavaFX
 
+## Gameplay :
+
+
+https://github.com/user-attachments/assets/d89d2de9-0ed4-4ac1-924a-8c820385d48b
+
+
+
 ## 🖱️ Mouse Control:
 
 Press the mouse button to grow the stick.
